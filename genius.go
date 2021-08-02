@@ -2,6 +2,8 @@
 package lyric
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -57,13 +59,42 @@ func Fetch(path string) (lyric string, err error) {
 	return
 }
 
-func search(query string) (string, error) {
-	// TODO:
-	return "", nil
-}
-
-// used in the DuckDuckGO search
+// used in the search methods to find a song entry
 var lyricURLRe = regexp.MustCompile(`https:\/\/genius.com/[^/]+-lyrics`)
+
+var ErrNotFound = errors.New("Not found")
+
+func Search(query string) (string, error) {
+	path := fmt.Sprintf("https://genius.com/api/search/multi?per_page=5&q=%s", url.QueryEscape(query))
+	res, err := http.Get(path)
+	if err != nil {
+		return "", err
+	}
+
+	defer res.Body.Close()
+	buffer, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return "", err
+	}
+
+	var jsonRes map[string]interface{}
+
+	err = json.Unmarshal(buffer, &jsonRes)
+	if err != nil {
+		return "", err
+	}
+
+	sections := jsonRes["response"].(map[string]interface{})["sections"].([]interface{})
+
+	for _, section := range sections {
+		if section.(map[string]interface{})["type"] == "song" {
+			for _, hit := range section.(map[string]interface{})["hits"].([]interface{}) {
+				return hit.(map[string]interface{})["result"].(map[string]interface{})["url"].(string), nil
+			}
+		}
+	}
+	return "", ErrNotFound
+}
 
 // SearchDDG searchs for a query using DuckDuckGO. Search engines can deal with
 // typos and not exact searchs. DuckDuckGO have a rate limit, so don't call the
@@ -100,5 +131,5 @@ func SearchDDG(query string) (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("No results found")
+	return "", ErrNotFound
 }

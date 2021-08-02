@@ -23,5 +23,10 @@ func TestGenius(t *testing.T) {
 		assert.NotNil(t, url)
 		assert.Equal(t, freeSoftwareSong, url)
 	})
-	// TODO: search genius
+	t.Run("Test genius search", func(t *testing.T) {
+		url, err := Search("free software song")
+		assert.Nil(t, err)
+		assert.NotNil(t, url)
+		assert.Equal(t, freeSoftwareSong, url)
+	})
 }
