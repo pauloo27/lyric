@@ -15,7 +15,12 @@ import (
 // Fetch fetchs a lyrics by it's url (the parameter path (not called url to
 // avoid problems with the url package)). It returns the lyric and an error.
 func Fetch(path string) (lyric string, err error) {
-	res, err := http.Get(path)
+	client := &http.Client{}
+
+	req, err := http.NewRequest("GET", path, nil)
+	req.Header.Add("User-Agent", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:59.0) Gecko/20100101 Firefox/81.0")
+
+	res, err := client.Do(req)
 	if err != nil {
 		return
 	}
@@ -37,16 +42,16 @@ func Fetch(path string) (lyric string, err error) {
 
 	lyricDiv := doc.Find("div", "class", "lyrics")
 
-	if lyricDiv.Error != nil {
-		for _, div := range doc.FindAll("div", "class", "jgQsqn") {
+	if lyricDiv.Error == nil {
+		lyric = strings.TrimSpace(lyricDiv.FullText())
+	} else {
+		for _, div := range doc.FindAll("div", "class", "eOLwDW") {
 
 			html := strings.ReplaceAll(div.HTML(), "<br/>", "<br/>\n")
 
 			lyric += strings.TrimSpace(soup.HTMLParse(html).FullText()) + "\n"
 		}
 		lyric = strings.TrimSpace(lyric)
-	} else {
-		lyric = strings.TrimSpace(lyricDiv.FullText())
 	}
 
 	return
