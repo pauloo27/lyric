@@ -64,6 +64,10 @@ var lyricURLRe = regexp.MustCompile(`https:\/\/genius.com/[^/]+-lyrics`)
 
 var ErrNotFound = errors.New("Not found")
 
+// Search searchs for a query using Genius API. It returns the URL of the
+// lyrics and an error, you can fetch the actual lyrics using Fetch(path).
+// If you want a search with better results when the search term contains typos
+// or not exactly the song name, you can use SearchDDG(query).
 func Search(query string) (string, error) {
 	path := fmt.Sprintf("https://genius.com/api/search/multi?per_page=5&q=%s", url.QueryEscape(query))
 	res, err := http.Get(path)
