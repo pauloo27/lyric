@@ -47,7 +47,7 @@ func Fetch(path string) (lyric string, err error) {
 	if lyricDiv.Error == nil {
 		lyric = strings.TrimSpace(lyricDiv.FullText())
 	} else {
-		for _, div := range doc.FindAll("div", "class", "eOLwDW") {
+		for _, div := range doc.FindAll("div", "data-lyrics-container", "true") {
 
 			html := strings.ReplaceAll(div.HTML(), "<br/>", "<br/>\n")
 
@@ -131,7 +131,7 @@ func SearchDDG(query string) (string, error) {
 		r := fmt.Sprintf("https://%s", strings.TrimSpace(result.Text()))
 
 		if lyricURLRe.MatchString(r) {
-			return r, nil
+			return strings.Split(r, "?")[0], nil
 		}
 	}
 
